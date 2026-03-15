@@ -1,0 +1,21 @@
+﻿services:
+  - type: web
+    name: cashcloud-server
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: PORT
+        value: 3000
+      - key: FLUTTERWAVE_PUBLIC_KEY
+        sync: false
+      - key: FLUTTERWAVE_SECRET_KEY
+        sync: false
+      - key: FLUTTERWAVE_KEY_TEST
+        sync: false
+      - key: MOCHA_ADMIN_EMAIL
+        sync: false

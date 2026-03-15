@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joblink 360 - China Pay Kenya Payment Gateway</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <!-- QRCode.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        [x-cloak] { display: none !important; }
+        .animate-pulse-slow { animation: pulse 3s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .scan-badge { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
+        .scan-badge.hidden { opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 min-h-screen flex items-center justify-center p-4">
+
+    <!-- LOADING STATE -->
+    <div x-show="isLoading" class="min-h-screen flex items-center justify-center">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mx-auto mb-4"></div>
+            <h2 class="text-xl font-bold text-white">Loading CashCloud...</h2>
+            <p class="text-blue-200 text-sm mt-2">Connecting to payment gateway</p>
+        </div>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <template x-if="!isLoggedIn">
+        <div class="min-h-screen flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
+                <div class="text-center mb-8">
+                    <div class="w-20 h-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-globe text-white text-3xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-800">CashCloud</h1>
+                    <p class="text-gray-500 text-sm">Multi-User Payment Platform</p>
+                </div>
+
+                <form @submit.prevent="login" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <input type="email" x-model="loginEmail" required placeholder="merchant@cloudcash.com"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" x-model="loginPassword" required placeholder="••••••••"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <label class="flex items-center">
+                            <input type="checkbox" x-model="rememberMe" class="mr-2">
+                            Remember Me
+                        </label>
+                        <a href="#" @click.prevent="showForgotPassword = true" class="text-blue-600 hover:underline">Forgot Password?</a>
+                    </div>
+                    <button type="submit"
+                            :disabled="processingLogin"
+                            class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50">
+                        <template x-if="!processingLogin">
+                            Sign In
+                        </template>
+                        <template x-if="processingLogin">
+                            <span class="flex items-center justify-center">
+                                <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Signing In...
+                            </span>
+                        </template>
+                    </button>
+                </form>
+
+                <div class="mt-6">
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white text-gray-500">OR</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-2 gap-3">
+                        <button @click="quickLogin('merchant')" class="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                            <i class="fa-solid fa-store text-blue-600"></i>
+                            <span class="text-sm font-medium">Merchant</span>
+                        </button>
+                        <button @click="quickLogin('admin')" class="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                            <i class="fa-solid fa-user-shield text-purple-600"></i>
+                            <span class="text-sm font-medium">Admin</span>
+                        </button>
+                        <button @click="quickLogin('receiver')" class="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                            <i class="fa-solid fa-mobile-alt text-green-600"></i>
+                            <span class="text-sm font-medium">Receiver</span>
+                        </button>
+                        <button @click="quickLogin('demo')" class="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+                            <i class="fa-solid fa-bolt text-yellow-600"></i>
+                            <span class="text-sm font-medium">Demo</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- FORGOT PASSWORD MODAL -->
+    <div x-show="showForgotPassword" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-md" @click.away="showForgotPassword = false">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Reset Password</h2>
+            <form @submit.prevent="forgotPassword" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    <input type="email" x-model="emailToReset" required placeholder="Enter your email"
+                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" @click="showForgotPassword = false" class="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Send Reset Link</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <template x-if="isLoggedIn">
+        <div :class="{'bg-gray-100': !displayOutput, 'bg-blue-50': displayOutput}" class="min-h-screen flex">
+            
+            <!-- SIDEBAR -->
+            <div class="w-64 bg-white shadow-lg hidden lg:block">
+                <div class="p-6 border-b border-gray-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-globe text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-gray-800">CashCloud</h2>
+                            <p class="text-xs text-gray-500">v1.0.0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="p-4 space-y-1">
+                    <template x-for="item in navigation" :key="item.id">
+                        <a href="#" 
+                           @click.prevent="currentTab = item.tab"
+                           :class="currentTab === item.tab ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'"
+                           class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all">
+                            <i :class="item.icon" class="text-lg"></i>
+                            <span x-text="item.label" class="font-medium"></span>
+                        </a>
+                    </template>
+                </nav>
+
+                <div class="absolute bottom-0 w-full p-4 border-t border-gray-200">
+                    <button @click="logout" class="flex items-center gap-3 px-4 py-3 w-full text-red-600 hover:bg-red-50 rounded-lg transition-all">
+                        <i class="fa-solid fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- MAIN CONTENT -->
+            <div class="flex-1">
+                <!-- HEADER -->
+                <div class="bg-white border-b border-gray-200 p-4">
+                    <div class="flex items-center justify-between">
+                        <h1 class="text-2xl font-bold text-gray-800" x-text="dashboardTitles[currentTab]"></h1>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg">
+                                <i class="fa-solid fa-user-circle text-blue-600"></i>
+                                <span class="font-medium text-sm" x-text="userDisplayName"></span>
+                            </div>
+                            <div class="flex items-center gap-2 px-4 py-2 bg-green-50 rounded-lg">
+                                <i class="fa-solid fa-wallet text-green-600"></i>
+                                <span class="font-bold text-sm text-green-700">¥<span x-text="accountBalance"></span> CNY</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTENT TABS -->
+                <div class="p-6">
+                    
+                    <!-- 💼 CREATE NEW TRANSACTION TAB -->
+                    <template x-if="currentTab === 'create'">
+                        <div class="space-y-6">
+                            
+                            <!-- STEP WIZARD -->
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <div class="flex items-center gap-2" :class="{ 'text-green-600': step === 1 || step > 1, 'text-gray-400': step < 1 }">
+                                    <div class="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-sm">1</div>
+                                    <span>Sender</span>
+                                </div>
+                                <div class="flex items-center gap-2" :class="{ 'text-green-600': step === 2, 'text-gray-400': step < 2 }">
+                                    <i class="fa-solid fa-exchange-alt text-gray-300"></i>
+                                </div>
+                                <div class="flex items-center gap-2" :class="{ 'text-green-600': step === 3 || step > 3, 'text-gray-400': step < 3 }">
+                                    <div class="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-sm">3</div>
+                                    <span>Receiver</span>
+                                </div>
+                            </div>
+
+                            <!-- STEP 1: SENDER DETAILS -->
+                            <div x-show="step === 1" class="bg-white rounded-xl shadow-lg p-6 border border-gray-200 animate-fade-in">
+                                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <i class="fa-solid fa-user text-blue-600"></i>
+                                    Sender Information
+                                </h3>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Sender Name</label>
+                                        <input type="text" x-model="sender.name" required
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                        <input type="email" x-model="sender.email" required
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                        <input type="tel" x-model="sender.phone" required
+                                               placeholder="+86 138 0000 0000"
+                                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STEP 2: AMOUNT & PAYMENT METHOD -->
+                            <div x-show="step === 2" class="space-y-6">
+                                
+                                <!-- Payment Method -->
+                                <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                        <i class="fa-solid fa-tags text-orange-600"></i>
+                                        Payment Method
+                                    </h3>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        <template x-for="method in paymentMethods" :key="method.value">
+                                            <button type="button" 
+                                                    @click="selectedMethod = method.value"
+                                                    :class="{ 'bg-blue-50 border-blue-500': selectedMethod === method.value }"
+                                                    class="flex flex-col items-center gap-2 p-4 border-2 rounded-xl transition-all hover:border-blue-300">
+                                                <i :class="method.icon" class="text-2xl" :class="method.color"></i>
+                                                <span class="text-sm font-medium text-gray-700" x-text="method.label"></span>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <!-- Amount Input -->
+                                <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                        <i class="fa-solid fa-yen-sign text-green-600"></i>
+                                        Payment Amount
+                                    </h3>
+                                    <div class="max-w-md mx-auto">
+                                        <div class="flex items-center gap-4">
+                                            <input type="number" x-model="amount" min="0.01" max="100000000"
+                                                   class="w-40 text-4xl font-bold text-center border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500 outline-none">
+                                            <span class="text-4xl font-bold text-green-600">¥</span>
+                                        </div>
+                                        <div class="flex justify-center gap-2 mt-4">
+                                            <button @click="amount = 100" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all">100</button>
+                                            <button @click="amount = 1000" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all">1,000</button>
+                                            <button @click="amount = 10000" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all">10,000</button>
+                                            <button @click="amount = 50000" class="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-all">50,000</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Purpose -->
+                                <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                                    <h3 class="text-lg font-bold text-gray-800 mb-4">Purpose / Notes</h3>
+                                    <textarea x-model="sender.notes" rows="3" placeholder="Payment for..." class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- STEP 3: RECEIVER DETAILS -->
+                            <div x-show="step === 3" class="space-y-6">
+                                
+                                <!-- Receiver Search -->
+                                <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                        <i class="fa-solid fa-user-group text-purple-600"></i>
+                                        Receiver Details
+                                    </h3>
+                                    <div class="relative">
+                                        <i class="fa-solid fa-search absolute left-4 top-4 text-gray-400"></i>
+                                        <input type="text" x-model="receiverSearch" @input="searchReceiver"
+                                               placeholder="Search by name, phone, or account..."
+                                               class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none">
+                                    </div>
+
+                                    <div x-show="recipients.length > 0" class="mt-4 max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+                                        <template x-for="recipient in recipients" :key="recipient.id">
+                                            <label class="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-0">
+                                                <input type="radio" :name="selectedReceiverId" value="recipient"
+                                                       :value="recipient.id"
+                                                       x-model="selectedReceiverId"
+                                                       :checked="selectedReceiverId === recipient.id"
+                                                       class="h-5 w-5 text-purple-600">
+                                                <div class="flex-1">
+                                                    <div class="flex items-center gap-2">
+                                                        <i :class="recipient.avatarIcon" class="text-xl"></i>
+                                                        <div>
+                                                            <p class="font-medium text-gray-800" x-text="recipient.name"></p>
+                                                            <p class="text-xs text-gray-500" x-text="recipient.type"></p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <i class="fa-solid fa-chevron-right text-gray-400"></i>
+                                            </label>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- STEP 4: SUCCESS -->
+                            <div x-show="step === 4" class="space-y-6">
+                                <!-- CONFIRMATION CARD -->
+                                <div class="bg-green-50 border-2 border-green-400 rounded-xl p-6 shadow-lg">
+                                    <div class="text-center">
+                                        <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <i class="fa-solid fa-check text-white text-3xl"></i>
+                                        </div>
+                                        <h2 class="text-2xl font-bold text-gray-800 mb-2">Payment Generated!</h2>
+                                        <p class="text-gray-600 mb-6">Your QR Code and Payment Link are ready.</p>
+                                    </div>
+
+                                    <!-- QR CODE -->
+                                    <div class="bg-white p-4 rounded-lg flex justify-center mb-6 shadow-inner">
+                                        <div class="w-[280px] h-[280px] border-4 border-green-200" id="qr-code-display"></div>
+                                    </div>
+
+                                    <!-- ACTION BUTTONS -->
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <button @click="downloadPDF" class="col-span-2 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 font-bold">
+                                            <i class="fa-solid fa-file-pdf mr-2"></i>
+                                            Download PDF Receipt
+                                        </button>
+                                        <button @click="copyLink" class="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-bold">
+                                            <i class="fa-solid fa-link mr-2"></i>
+                                            Copy Payment Link
+                                        </button>
+                                        <button @click="sharePlatform('whatsapp')" class="bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-bold">
+                                            <i class="fa-brands fa-whatsapp mr-2"></i>
+                                            Share on WhatsApp
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- TRADING HISTORY TAB -->
+                    <template x-if="currentTab === 'transactions'">
+                        <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-list text-blue-600"></i>
+                                Transaction History
+                            </h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-gray-600">Transaction ID</th>
+                                            <th class="px-4 py-3 text-gray-600">Recipient</th>
+                                            <th class="px-4 py-3 text-gray-600">Receiver</th>
+                                            <th class="px-4 py-3 text-gray-600">Amount</th>
+                                            <th class="px-4 py-3 text-gray-600">Status</th>
+                                            <th class="px-4 py-3 text-gray-600">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-t">
+                                            <td class="px-4 py-3 text-gray-800">TXN-2024-001</td>
+                                            <td class="px-4 py-3 text-gray-800">&nbsp;</td>
+                                            <td class="px-4 py-3 text-gray-800">John Doe</td>
+                                            <td class="px-4 py-3 text-green-600 font-bold">¥100</td>
+                                            <td class="px-4 py-3"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Success</span></td>
+                                            <td class="px-4 py-3">
+                                                <button class="text-blue-600 hover:underline">View</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-t">
+                                            <td class="px-4 py-3 text-gray-800">TXN-2024-002</td>
+                                            <td class="px-4 py-3 text-gray-800">&nbsp;</td>
+                                            <td class="px-4 py-3 text-gray-800">Maria Smith</td>
+                                            <td class="px-4 py-3 text-green-600 font-bold">¥500</td>
+                                            <td class="px-4 py-3"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Processing</span></td>
+                                            <td class="px-4 py-3">
+                                                <button class="text-blue-600 hover:underline">View</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
+
+<script>
+// ==========================================
+// JAVASCRIPT LOGIC START
+// ==========================================
+
+function cashCloudApp() {
+    return {
+        API_BASE: '/api',
+        isLoading: true,
+        isLoggedIn: false,
+        currentTab: 'create',
+        step: 1,
+        processingLogin: false,
+        showForgotPassword: false,
+        emailToReset: '',
+        
+        navigation: [
+            { id: 1, label: 'Create Payment', tab: 'create', icon: 'fa-solid fa-plus-circle' },
+            { id: 2, label: 'Transactions', tab: 'transactions', icon: 'fa-solid fa-list' },
+            { id: 3, label: 'QR Codes', tab: 'qr', icon: 'fa-solid fa-qrcode' },
+            { id: 4, label: 'Reports', tab: 'reports', icon: 'fa-solid fa-chart-bar' },
+        ],
+        dashboardTitles: {
+            'create': 'Create New Payment',
+            'transactions': 'Transaction History',
+            'qr': 'QR Code Generator',
+            'reports': 'Reports & Analytics',
+        },
+        
+        loginEmail: 'merchant@cloudcash.com',
+        loginPassword: '',
+        rememberMe: false,
+        
+        // Quick Login Helpers
+        userRole: 'merchant',
+        accountBalance: '0.00',
+        userDisplayName: 'CashCloud Merchant',
+        
+        // Sender Details
+        sender: {
+            name: '',
+            email: '',
+            phone: '',
+            notes: ''
+        },
+        
+        // Payment Methods
+        paymentMethods: [
+            { value: 'wechat', label: 'WeChat Pay', icon: 'fa-solid fa-weixin', color: 'text-green-600' },
+            { value: 'alipay', label: 'Alipay', icon: 'fa-solid fa-payar', color: 'text-blue-600' },
+            { value: 'bank', label: 'Bank Transfer', icon: 'fa-solid fa-university', color: 'text-green-500' },
+            { value: 'card', label: 'Credit Card', icon: 'fa-solid fa-credit-card', color: 'text-purple-600' },
+        ],
+        selectedMethod: 'wechat',
+        
+        // Amount
+        amount: '',
+        
+        // Receiver
+        receiverSearch: '',
+        selectedReceiverId: '',
+        searchRecipients: [
+            { id: 1, name: 'Sande Allan', type: 'M-Pesa', phone: '+254718554383', avatarIcon: 'fa-solid fa-user' },
+            { id: 2, name: 'Beijing Trade Co.', type: 'China Merchant', phone: '+8613400000000', avatarIcon: 'fa-solid fa-store' },
+            { id: 3, name: 'Nairobi Tech Ltd.', type: 'Bank Transfer', account: '1234567890', avatarIcon: 'fa-solid fa-building' },
+        ],
+        recipients: [],
+        
+        // AUTO-INIT
+        initApp() {
+            setTimeout(() => {
+                this.isLoading = false;
+                this.login(this.loginEmail, 'password123');
+                // Mock demo data
+                this.accountBalance = '1,234,567.89';
+                this.userDisplayName = 'Demo Merchant';
+            }, 2000);
+        },
+        
+        // LOGIN
+        async login(email, password) {
+            this.processingLogin = true;
+            try {
+                const response = await fetch(`${this.API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                // Simulate login for demo
+                setTimeout(() => {
+                    const data = await response.json();
+                    if (data.success) {
+                        this.isLoggedIn = true;
+                        this.userDisplayName = `${data.user.firstName} ${data.user.lastName}`;
+                    } else {
+                        alert(data.error || 'Login failed');
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Login error:', error);
+                // Demo fallback
+                this.isLoggedIn = true;
+                this.userDisplayName = `Demo ${this.loginEmail}`;
+                this.accountBalance = '1,234,567.89';
+            } finally {
+                this.processingLogin = false;
+            }
+        },
+        
+        // FORGOT PASSWORD
+        async forgotPassword() {
+            this.showForgotPassword = false;
+            alert(`Password reset link sent to ${this.emailToReset}`);
+        },
+        
+        // QUICK LOGIN
+        quickLogin(role) {
+            this.userRole = role;
+            
+            if (role === 'merchant') {
+                this.loginEmail = 'merchant@cloudcash.com';
+                this.loginPassword = 'password123';
+                this.login(this.loginEmail, this.loginPassword);
+            } else if (role === 'admin') {
+                this.loginEmail = 'admin@cloudcash.com';
+                this.loginPassword = 'admin123';
+                this.login(this.loginEmail, this.loginPassword);
+            } else if (role === 'receiver') {
+                this.loginEmail = 'receiver@cloudcash.com';
+                this.loginPassword = 'receiver123';
+                this.login(this.loginEmail, this.loginPassword);
+            } else {
+                // Demo
+                this.loginEmail = 'demo@cloudcash.com';
+                this.loginPassword = 'demo123';
+                this.login(this.loginEmail, this.loginPassword);
+            }
+        },
+        
+        // LOGOUT
+        logout() {
+            this.isLoggedIn = false;
+            this.loginEmail = '';
+            this.loginPassword = '';
+            document.querySelector('.min-h-screen').innerHTML = '';
+        },
+        
+        // SEARCH RECEIVER
+        async searchReceiver() {
+            if (this.receiverSearch.length < 3) return;
+            
+            this.recipients = this.searchRecipients.filter(r => 
+                r.name.toLowerCase().includes(this.receiverSearch.toLowerCase()) ||
+                r.phone.includes(this.receiverSearch)
+            );
+        },
+        
+        // CREATE TRANSACTION (FULL FLOW)
+        async createTransaction() {
+            this.step = 4;
+            
+            // Confirm data
+            this.confirmationData = {
+                sender: {
+                    name: this.sender.name,
+                    email: this.sender.email,
+                    phone: this.sender.phone
+                },
+                amount: parseFloat(this.amount),
+                paymentMethod: this.selectedMethod,
+                purpose: this.sender.notes,
+                receiver: this.searchRecipients.find(r => r.id === this.selectedReceiverId)
+            };
+        },
+        
+        // SHARE PLATFORM
+        copyLink() {
+            alert(`Link copied: https://cloudcash.onhercules.app/pay/${this.transactionRef}`);
+        },
+        
+        sharePlatform(platform) {
+            alert(`Opening ${platform}...`);
+        },
+        
+        downloadPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text("Payment Receipt", 14, 22);
+            doc.setFontSize(10);
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 30);
+            doc.text(`Amount: ¥${this.amount}`, 14, 38);
+            doc.text(`To: ${this.sender.name}`, 14, 48);
+            doc.text(`From: ${this.userDisplayName}`, 14, 58);
+            
+            doc.save('receipt.pdf');
+        }
+        
+        // ADD UNIQUE HELPERS
+    };
+}
+</script>
+
+</html>

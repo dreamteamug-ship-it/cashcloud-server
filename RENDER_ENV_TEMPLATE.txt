@@ -1,0 +1,26 @@
+﻿# RENDER ENVIRONMENT VARIABLES
+# Add these in your Render dashboard under Environment Variables
+
+# Node Environment
+NODE_ENV=production
+
+# Server Port (Render will override this automatically)
+PORT=3000
+
+# MongoDB - Use MongoDB Atlas connection string (free tier)
+# Create account at https://www.mongodb.com/atlas
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/cancash
+
+# Flutterwave API Keys (from your local .env file)
+FLUTTERWAVE_PUBLIC_KEY=your_flutterwave_public_key_here
+FLUTTERWAVE_SECRET_KEY=your_flutterwave_secret_key_here
+FLUTTERWAVE_KEY_TEST=your_flutterwave_test_key_here
+
+# Admin Email
+MOCHA_ADMIN_EMAIL=admin@cloudcash.com
+
+# ====================================
+# INSTRUCTIONS:
+# 1. Copy your actual values from local .env file
+# 2. Create MongoDB Atlas database and get its connection string
+# 3. Add ALL variables in Render dashboard
