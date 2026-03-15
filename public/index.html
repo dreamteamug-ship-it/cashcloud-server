@@ -3,728 +3,796 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CashCloud - Multi-User Payment Platform</title>
+    <title>Joblink 360 - China Pay Kenya Payment Gateway</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        
-        .header {
-            text-align: center;
-            padding: 40px 0;
-            color: white;
-        }
-        
-        .header h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-        
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
-        
-        .payment-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-        
-        .payment-card {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        
-        .payment-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .payment-card h2 {
-            color: #4a5568;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            border-bottom: 2px solid #e2e8f0;
-            padding-bottom: 10px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #4a5568;
-            font-weight: 500;
-        }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            width: 100%;
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-        
-        .btn:active {
-            transform: translateY(0);
-        }
-        
-        .transaction-table {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 40px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-        }
-        
-        .transaction-table h2 {
-            color: #4a5568;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th {
-            background: #f7fafc;
-            color: #4a5568;
-            font-weight: 600;
-            padding: 12px;
-            text-align: left;
-            border-bottom: 2px solid #e2e8f0;
-        }
-        
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            color: #4a5568;
-        }
-        
-        tr:hover {
-            background: #f7fafc;
-        }
-        
-        .status-badge {
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            display: inline-block;
-        }
-        
-        .status-success {
-            background: #c6f6d5;
-            color: #22543d;
-        }
-        
-        .status-pending {
-            background: #feebc8;
-            color: #744210;
-        }
-        
-        .status-failed {
-            background: #fed7d7;
-            color: #742a2a;
-        }
-        
-        .qr-section {
-            text-align: center;
-            margin-top: 20px;
-            padding: 20px;
-            background: #f7fafc;
-            border-radius: 8px;
-            display: none;
-        }
-        
-        .qr-section.show {
-            display: block;
-        }
-        
-        .qr-code {
-            margin: 20px auto;
-            width: 200px;
-            height: 200px;
-            background: #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-        }
-        
-        .payment-link {
-            word-break: break-all;
-            color: #667eea;
-            text-decoration: none;
-        }
-        
-        .payment-link:hover {
-            text-decoration: underline;
-        }
-        
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .error-message {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #f56565;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            z-index: 9999;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-        
-        .success-message {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #48bb78;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-            z-index: 9999;
-            animation: slideIn 0.3s ease;
-        }
-        
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .payment-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            table {
-                display: block;
-                overflow-x: auto;
-            }
-        }
+        [x-cloak] { display: none !important; }
+        .animate-pulse-slow { animation: pulse 3s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .scan-badge { position: fixed; bottom: 20px; right: 20px; z-index: 100; }
+        .scan-badge.hidden { opacity: 0; pointer-events: none; }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>💰 CashCloud</h1>
-            <p>Multi-User Payment Platform</p>
+<body class="bg-gradient-to-br from-blue-900 via-indigo-900 to-purple-900 min-h-screen flex items-center justify-center p-4">
+    
+    <div x-data="app()" x-init="initApp()" class="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden animate-fade-in">
+        
+        <!-- HEADER -->
+        <div class="bg-gradient-to-r from-green-600 to-emerald-700 text-white p-6 shadow-lg">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold flex items-center gap-3">
+                        <i class="fa-solid fa-globe text-yellow-400 text-3xl"></i>
+                        <span>Joblink 360</span>
+                    </h1>
+                    <p class="text-blue-100 text-sm mt-1">中国商户 → 肯尼亚收款 Gateway</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="px-4 py-2 bg-green-500/20 border border-green-400/30 rounded-full">
+                        <i class="fa-solid fa-shield-check mr-2"></i>
+                        <span class="text-xs font-bold uppercase tracking-wide">Secure Test Mode</span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 w-full h-px bg-green-500/20"></div>
         </div>
 
-        <div class="payment-grid">
-            <!-- Send Payment Card -->
-            <div class="payment-card">
-                <h2>Send Payment</h2>
-                <form id="sendPaymentForm">
-                    <div class="form-group">
-                        <label for="senderId">Sender ID</label>
-                        <input type="text" id="senderId" placeholder="Enter sender ID" required>
+        <!-- API KEY INPUT SECTION -->
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fa-solid fa-shield-exclamation text-yellow-600"></i>
+                </div>
+                <div class="ml-3 w-full">
+                    <h3 class="text-sm font-medium text-gray-800">🔑 Critical: Configure API Keys</h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-600">
+                            ✏️ Open this file in Notepad → Find <code class="bg-yellow-100 px-1 py-0.5 rounded">FLWPUBK_TEST-XXXX...</code> → Replace with YOUR Flutterwave TEST Public Key
+                        </p>
+                        <p class="text-sm text-gray-600 mt-1">
+                            ✏️ Hold Ctrl+Find (Ctrl+F) → Search: flutterwavePublicKey → Paste key where marked below
+                        </p>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="receiverId">Receiver ID</label>
-                        <input type="text" id="receiverId" placeholder="Enter receiver ID" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="amount">Amount (CNY)</label>
-                        <input type="number" id="amount" placeholder="Enter amount" min="0.01" step="0.01" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="purpose">Purpose / Notes</label>
-                        <textarea id="purpose" rows="3" placeholder="Enter payment purpose"></textarea>
-                    </div>
-                    
-                    <button type="submit" class="btn">Send Payment</button>
-                </form>
-            </div>
-
-            <!-- Request Payment Card -->
-            <div class="payment-card">
-                <h2>Request Payment</h2>
-                <form id="requestPaymentForm">
-                    <div class="form-group">
-                        <label for="requesterId">Your ID</label>
-                        <input type="text" id="requesterId" placeholder="Enter your ID" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="requestAmount">Amount (CNY)</label>
-                        <input type="number" id="requestAmount" placeholder="Enter amount" min="0.01" step="0.01" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="requestPurpose">Purpose</label>
-                        <input type="text" id="requestPurpose" placeholder="Enter purpose" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="receiverEmail">Receiver Email</label>
-                        <input type="email" id="receiverEmail" placeholder="Enter receiver email" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="receiverName">Receiver Name</label>
-                        <input type="text" id="receiverName" placeholder="Enter receiver name" required>
-                    </div>
-                    
-                    <button type="submit" class="btn">Generate Payment Link</button>
-                </form>
-
-                <!-- QR Code Section -->
-                <div id="qrSection" class="qr-section">
-                    <h3>Payment Generated!</h3>
-                    <div id="qrCode" class="qr-code">
-                        <span>QR Code</span>
-                    </div>
-                    <p>Payment Link:</p>
-                    <a id="paymentLink" href="#" class="payment-link" target="_blank"></a>
-                    <p style="margin-top: 10px; font-size: 0.9rem; color: #718096;">Transaction Ref: <span id="transactionRef"></span></p>
                 </div>
             </div>
         </div>
 
-        <!-- Transaction History -->
-        <div class="transaction-table">
-            <h2>Transaction History</h2>
-            <table id="transactionTable">
-                <thead>
-                    <tr>
-                        <th>Transaction ID</th>
-                        <th>Recipient</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="transactionBody">
-                    <tr>
-                        <td colspan="5" style="text-align: center; color: #a0aec0;">Loading transactions...</td>
-                    </tr>
-                </tbody>
-            </table>
+        <!-- CONTENT -->
+        <div class="p-6 md:p-8">
+            
+            <!-- PAYMENT STATUS -->
+            <div class="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-satellite-dish text-blue-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-800">Payment Status</h3>
+                        <p class="text-xs text-gray-500">Track your transaction flow</p>
+                    </div>
+                </div>
+                <span :class="statusBadgeClass" class="text-lg font-bold px-4 py-2 rounded-full bg-green-100 text-green-800">
+                    <span class="status-dot bg-green-500 mr-2"></span>
+                    <span x-text="paymentStatus"></span>
+                </span>
+            </div>
+
+            <!-- FORM SECTION -->
+            <form @submit.prevent="generate" class="space-y-6">
+                
+                <!-- SECTION 1: CHINA MERCHANT DETAILS -->
+                <div class="bg-gradient-to-r from-purple-50 to-indigo-50 p-6 rounded-2xl border-2 border-purple-200">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-store text-purple-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-gray-800">🇨🇳 China Merchant / Shop URL</h2>
+                            <p class="text-xs text-gray-500">E-commerce shop that will receive payment</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-3 gap-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-purple-700 mb-1">Shop Name / Representative</label>
+                            <input type="text" x-model="shopRep"
+                                   placeholder="e.g. Taobao Store ABC"
+                                   class="w-full px-4 py-3 border border-purple-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-purple-700 mb-1">Shop URL (CRITICAL)</label>
+                            <input type="url" x-model="shopUrl"
+                                   placeholder="https://taobao-store.com"
+                                   class="w-full px-4 py-3 border border-purple-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all">
+                            <p class="text-xs text-red-500 mt-1">♨ Required: https:// format</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-purple-700 mb-1">Contact Email/Phone</label>
+                            <input type="email" x-model="shopContact"
+                                   placeholder="service@example.com"
+                                   class="w-full px-4 py-3 border border-purple-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: KENYA RECEIVER DETAILS -->
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-2xl border-2 border-green-200">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-landmark text-green-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-gray-800">🇰🇪 Kenya Receiver Details</h2>
+                            <p class="text-xs text-gray-500">Person or institution who will receive payment</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-green-700 mb-1">Receiver Name / ID (PREFERRED)</label>
+                            <input type="text" x-model="receiverName"
+                                   placeholder="e.g. Sande Allan (ID: KEN-123456)"
+                                   class="w-full px-4 py-3 border border-green-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                            <p class="text-xs text-gray-500 mt-1">Card/Passport/ID number if institution</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-green-700 mb-1">Account Type (REQUIRED)</label>
+                            <select x-model="receiverType"
+                                    class="w-full px-4 py-3 border border-green-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white outline-none">
+                                <option value="mpesa">M-Pesa (Kenya) - PHONE</option>
+                                <option value="bank">Bank Account (USD)</option>
+                                <option value="other">Other Account</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="block text-xs font-semibold text-green-700 mb-1">
+                            <i class="fa-solid fa-phone text-green-600"></i> Account Number / Phone (REQUIRED)
+                        </label>
+                        <input type="tel" x-model="receiverPhone"
+                               :placeholder="receiverPhoneHint()"
+                               inputmode="numeric"
+                               class="w-full px-4 py-3 border border-green-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all lg:text-right">
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="fa-solid fa-info-circle"></i> M-Pesa: 2547... (20 digits); Bank: 10-16 digits
+                        </p>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: PAYMENT AMOUNT -->
+                <div class="bg-gradient-to-r from-orange-50 to-amber-50 p-6 rounded-2xl border-2 border-orange-200">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-money-bill-wave text-orange-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-gray-800">💰 Payment Amount</h2>
+                            <p class="text-xs text-gray-500">CNY amount to transfer from China</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-semibold text-orange-700 mb-1 flex items-center gap-2">
+                                <i class="fa-solid fa-yen-sign text-orange-500 text-lg"></i>
+                                Amount (CNY) / Amount (Yuan)
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <input type="number" x-model="amount"
+                                       min="1" max="1000000"
+                                       placeholder="10"
+                                       class="w-full px-4 py-3 text-2xl font-bold bg-orange-100 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-right transition-all">
+                                <span class="text-3xl font-bold text-orange-600">¥</span>
+                            </div>
+                            <p class="text-xs text-orange-700 mt-2 text-center">
+                                Min: ¥<code>1</code> Max: <code>¥1,000,000</code>
+                            </p>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-orange-700 mb-1">Payment Method (For China Sender)</label>
+                            <select x-model="paymentMethod"
+                                    class="w-full px-4 py-3 border border-orange-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white outline-none">
+                                <option value="wechat">WeChat Pay (微信支付)</option>
+                                <option value="alipay">Alipay (支付宝)</option>
+                                <option value="bank">Bank Transfer Direct</option>
+                                <option value="card">Credit/Debit Card</option>
+                                <option value="pp">PayPal</option>
+                            </select>
+                            <p class="text-xs text-gray-500 mt-2">
+                                Method China sender will pay using
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GENERATE BUTTON -->
+                <button type="submit"
+                        :disabled="isGenerating || !receiverName || !receiverPhone || !shopUrl || amount < 1"
+                        class="w-full md:w-1/2 mx-auto bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 px-6 rounded-xl hover:from-green-700 hover:to-emerald-700 transform transition-all active:scale-[0.98] disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg font-bold shadow-xl shadow-green-200">
+                    
+                    <template x-if="!isGenerating">
+                        <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+                        Generate QR & Payment Link
+                    </template>
+                    <template x-if="isGenerating">
+                        <i class="fa-solid fa-circle-notch fa-spin text-xl"></i>
+                        <span class="animate-pulse">Processing...</span>
+                    </template>
+                </button>
+            </form>
+
+            <!-- OUTPUT SECTION -->
+            <div class="border-t-2 border-gray-200 pt-8 mt-8">
+                
+                <!-- LOADING STATE -->
+                <div x-show="isGenerating && paymentStatus === 'processing'" style="display: none;" x-cloak>
+                    <div class="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-6 text-center">
+                        <i class="fa-solid fa-circle-notch fa-spin text-yellow-600 text-4xl mb-4"></i>
+                        <h3 class="font-bold text-yellow-800 text-lg">Generating Payment Link...</h3>
+                        <p class="text-sm text-yellow-600 mt-2">This may take 3-5 seconds</p>
+                    </div>
+                </div>
+
+                <!-- OUTPUT STATES (QR, LINK, RECEIPTS) -->
+                <div x-show="displayOutput" x-cloak>
+                    
+                    <!-- STATUS HEADER -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                                <i class="fa-solid fa-check-circle text-green-600"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800">{{ methodLabel() }}</h2>
+                                <p class="text-xs text-gray-500">Generated on <span x-text="displayTime"></span></p>
+                            </div>
+                        </div>
+                        <span :class="statusColorClass" class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-800 font-semibold" x-text="paymentStatus"></span>
+                    </div>
+
+                    <!-- PAYMENT METHOD BADGE -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-info-circle text-blue-600"></i>
+                            <p class="text-sm text-blue-800">
+                                China sender can pay via <strong>{{ methodLabel() }}</strong> → then settlement goes to receiver
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- CARDS ROW: QR + LINK -->
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        
+                        <!-- QR CODE CARD -->
+                        <div class="bg-white border-2 border-gray-100 rounded-xl p-5 shadow-lg hover:shadow-xl transition-shadow">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-qrcode text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">Scan QR Code</h3>
+                                        <p class="text-xs text-gray-500">For WeChat/Alipay Pay</p>
+                                    </div>
+                                </div>
+                                <button @click="downloadQR()" 
+                                        :disabled="!qrReady || isGenerating"
+                                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm font-medium disabled:bg-gray-300 disabled:cursor-not-allowed">
+                                    <i class="fa-solid fa-download mr-1"></i> Download
+                                </button>
+                            </div>
+                            
+                            <!-- QR DISPLAY -->
+                            <div class="bg-gray-50 border-2 border-gray-200 rounded-lg p-6 flex items-center justify-center min-h-[350px]">
+                                <div class="text-center">
+                                    <div x-show="qrReady" style="width: 100%; max-width: 300px;" x-transition>
+                                        <div id="qrcode-display"></div>
+                                    </div>
+                                    
+                                    <div x-show="qrLoading" class="flex flex-col items-center">
+                                        <i class="fa-solid fa-circle-notch fa-spin text-green-500 text-3xl mb-2"></i>
+                                        <p class="text-sm text-yellow-600 font-medium">Generating QR Code...</p>
+                                    </div>
+                                    
+                                    <div x-show="!qrReady && !qrLoading" class="text-center text-gray-300">
+                                        <i class="fa-solid fa-qrcode text-7xl mb-3"></i>
+                                        <p class="text-sm">Click Generate to create</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PAYMENT LINK CARD -->
+                        <div class="bg-white border-2 border-gray-100 rounded-xl p-5 shadow-lg hover:shadow-xl transition-shadow">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-link text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-800">Share Payment Link</h3>
+                                        <p class="text-xs text-gray-500">Copy via WhatsApp/Telegram</p>
+                                    </div>
+                                </div>
+                                <button @click="copyLink"
+                                        :disabled="!displayLink || isGenerating"
+                                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium disabled:bg-gray-300 disabled:cursor-not-allowed">
+                                    <i class="fa-regular fa-copy mr-1"></i> Copy
+                                </button>
+                            </div>
+                            
+                            <!-- QUICK SHARE -->
+                            <div class="flex gap-2 mb-3">
+                                <button @click="sharePlatform('whatsapp')" :class="platformColor['whatsapp']" class="flex-1 bg-white border-2 border-gray-200 hover:border-green-400 p-2 rounded-lg text-xs transition-all">
+                                    <i class="fa-brands fa-whatsapp text-xl text-green-600"></i> WhatsApp
+                                </button>
+                                <button @click="sharePlatform('telegram')" :class="platformColor['telegram']" class="flex-1 bg-white border-2 border-gray-200 hover:border-blue-400 p-2 rounded-lg text-xs transition-all">
+                                    <i class="fa-brands fa-telegram text-xl text-blue-600"></i> Telegram
+                                </button>
+                                <button @click="sharePlatform('wechat')" :class="platformColor['wechat']" class="flex-1 bg-white border-2 border-gray-200 hover:border-blue-400 p-2 rounded-lg text-xs transition-all">
+                                    <i class="fa-brands fa-weixin text-xl text-blue-600"></i> WeChat
+                                </button>
+                            </div>
+                            
+                            <!-- LINK DISPLAY -->
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                                <input readonly :value="displayLink"
+                                       class="w-full px-3 py-2 bg-white rounded text-xs font-mono text-blue-800 break-all"
+                                       placeholder="Payment link will appear here...">
+                            </div>
+                            
+                            <button @click="downloadPDF"
+                                    :disabled="!displayLink || isGenerating"
+                                    class="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 text-sm">
+                                <i class="fa-solid fa-file-pdf mr-1"></i> Download PDF Receipt
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- RECEIPTS SECTION -->
+                    <div class="space-y-4">
+                        <!-- RECEIVER RECEIPT -->
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 rounded-xl p-5 shadow-md">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-receipt text-white"></i>
+                                </div>
+                                <h3 class="font-bold text-green-800">🇰🇪 Receiver Receipt</h3>
+                            </div>
+                            <div class="grid md:grid-cols-2 gap-3 text-sm">
+                                <div class="flex justify-between border-b border-green-200 pb-2">
+                                    <span class="text-gray-600">收款人 (To):</span>
+                                    <span class="font-bold text-green-800" x-text="receiverSummaryName()"></span>
+                                </div>
+                                <div class="flex justify-between border-b border-green-200 pb-2">
+                                    <span class="text-gray-600">收款账号:</span>
+                                    <span class="font-bold text-green-800" x-text="receiverPhoneFormatted()"></span>
+                                </div>
+                                <div class="flex justify-between border-b border-green-200 pb-2">
+                                    <span class="text-gray-600">付款方 (From):</span>
+                                    <span class="font-bold text-gray-800" x-text="shopSummaryName()"></span>
+                                </div>
+                                <div class="flex justify-between border-b border-green-200 pb-2">
+                                    <span class="text-gray-600">金额 (Amount):</span>
+                                    <span class="font-bold text-green-700 text-xl">¥<span x-text="displayAmount"></span> CNY</span>
+                                </div>
+                                <div class="flex justify-between border-b border-green-200 pb-2">
+                                    <span class="text-gray-600">用途 (Purpose):</span>
+                                    <span class="font-semibold">{{ purposeLabel() }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">状态 (Status):</span>
+                                    <span class="font-bold text-green-600" x-text="paymentStatus"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SENDER SLIP -->
+                        <div class="bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-300 rounded-xl p-5 shadow-md">
+                            <div class="flex items-center gap-3 mb-3">
+                                <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                                    <i class="fa-solid fa-file-signature text-white"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800">🇨🇳 China Sender Slip</h3>
+                            </div>
+                            <div class="text-xs text-gray-700 space-y-1">
+                                <div class="flex justify-between border-b border-purple-200 pb-1">
+                                    <span>收款平台:</span>
+                                    <span class="font-semibold text-purple-700">{{ methodLabel() }}</span>
+                                </div>
+                                <div class="flex justify-between border-b border-purple-200 pb-1">
+                                    <span>账户类型:</span>
+                                    <span class="font-semibold text-purple-700" x-text="receiverType === 'mpesa' ? 'M-Pesa Mobile' : receiverType === 'bank' ? 'Bank Account' : 'Other Account'"></span>
+                                </div>
+                                <div class="flex justify-between border-b border-purple-200 pb-1">
+                                    <span>收款号码 (Phone):</span>
+                                    <span class="font-mono font-bold" x-text="receiverPhoneFormatted()"></span>
+                                </div>
+                                <div class="flex justify-between border-b border-purple-200 pb-1">
+                                    <span>网址 (URL):</span>
+                                    <span class="font-mono text-purple-600" x-text="shopUrl || 'Not Provided'"></span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>生成时间 (Time):</span>
+                                    <span class="font-medium" x-text="displayTime"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SENDER INSTRUCTIONS -->
+                        <div class="bg-yellow-50 border border-yellow-300 rounded-xl p-4">
+                            <div class="flex items-start gap-3">
+                                <i class="fa-solid fa-lightbulb text-yellow-600 text-xl mt-0.5"></i>
+                                <div>
+                                    <h3 class="font-bold text-yellow-800 mb-2">📱 How China Sender Pays</h3>
+                                    <ul class="text-xs text-yellow-700 space-y-1">
+                                        <li>1️⃣ WeChat Pay (微信支付): Open WeChat → Scan QR → Pay ¥10 CNY → Done</li>
+                                        <li>2️⃣ Alipay (支付宝): Open Alipay → Scan QR → Pay ¥10 CNY → Done</li>
+                                        <li>3️⃣ Share this link directly → Open in browser → Complete payment in app</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="bg-gray-100 border-t border-gray-200 p-3 text-center">
+            <p class="text-xs text-gray-500">
+                🔒 Test Mode (Flutterwave Sandbox). Real transaction requires live API keys.
+            </p>
+            <p class="text-xs text-gray-400 mt-1">
+                Full testing with live keys needs Flutterwave account with China merchant onboarding.
+            </p>
         </div>
     </div>
 
     <script>
-    // Wait for the page to load
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('✅ Page loaded');
-        
-        // Initialize everything
-        initializeApp();
-    });
+        // ========================================
+        // ⬇️ PASTE YOUR FLUTTERWAVE TEST KEYS BELOW ⬇️
+        // ========================================
 
-    // Main initialization function
-    async function initializeApp() {
-        try {
-            // Check server health
-            await checkServerHealth();
-            
-            // Load transaction history
-            await loadTransactionHistory();
-            
-            // Setup form handlers
-            setupFormHandlers();
-            
-        } catch (error) {
-            console.error('❌ Initialization error:', error);
-            showMessage('Failed to initialize application', 'error');
-        }
-    }
+        function app() {
+            return {
+                // 🎯 API KEYS - COPY & PASTE YOUR KEYS HERE
+                flutterwavePublicKey: "FLWPUBK_TEST-bYDMWDynIUHOk9hM5n38/v1wyF+XUcGrxT/Q23xsSvg=", // ⬇️ PASTE HERE
+                flutterwaveSecretKey: "FLWSECK_TEST-PmH4BTrAj7owWSEqwwvN8wshthieZpOF", // ⬇️ PASTE HERE
+                flutterwaveAPIBaseUrl: "https://api.flutterwave.com/v3",
+                
+                // APP CONFIGURATION
+                shopRep: "Test Store",
+                shopUrl: "https://teststore.cn",
+                shopContact: "service@test.com",
+                receiverName: "Sande Allan",
+                receiverType: "mpesa",
+                receiverPhone: "254718554383",
+                amount: "10",
+                paymentMethod: "wechat",
+                purpose: "227020",
+                
+                // STATE
+                isGenerating: false,
+                displayOutput: false,
+                qrReady: false,
+                qrLoading: false,
+                displayLink: "",
+                displayTime: "",
+                transactionRef: "",
+                paymentStatus: "initiated",
+                hasError: false,
+                errorMessage: "",
+                qrTextData: "",
+                
+                // STATUS DYNAMICS
+                statusBadgeClass: "bg-green-500/20 text-white",
+                statusColorClass: "text-green-600 bg-green-100",
 
-    // Check server health
-    async function checkServerHealth() {
-        try {
-            const response = await fetch('/health');
-            
-            if (!response.ok) {
-                throw new Error(`Server returned ${response.status}`);
-            }
-            
-            const data = await response.json();
-            console.log('✅ Server health:', data);
-            
-            if (data.status === 'ok') {
-                showMessage('Connected to server', 'success');
-                document.body.classList.add('server-connected');
-            }
-            
-            return data;
-        } catch (error) {
-            console.error('❌ Server health check failed:', error);
-            showMessage('Cannot connect to server. Please check your connection.', 'error');
-            throw error;
-        }
-    }
-
-    // Load transaction history
-    async function loadTransactionHistory() {
-        const tableBody = document.getElementById('transactionBody');
-        
-        try {
-            const response = await fetch('/api/payments');
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const transactions = await response.json();
-            console.log('✅ Transactions loaded:', transactions);
-            
-            if (transactions && transactions.length > 0) {
-                updateTransactionTable(transactions);
-            } else {
-                tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #a0aec0;">No transactions found</td></tr>';
-            }
-            
-        } catch (error) {
-            console.log('ℹ️ No transactions available:', error.message);
-            tableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #a0aec0;">No transactions available</td></tr>';
-        }
-    }
-
-    // Setup form event handlers
-    function setupFormHandlers() {
-        // Send payment form
-        const sendForm = document.getElementById('sendPaymentForm');
-        if (sendForm) {
-            sendForm.addEventListener('submit', handleSendPayment);
-        }
-        
-        // Request payment form
-        const requestForm = document.getElementById('requestPaymentForm');
-        if (requestForm) {
-            requestForm.addEventListener('submit', handleRequestPayment);
-        }
-    }
-
-    // Handle send payment form submission
-    async function handleSendPayment(event) {
-        event.preventDefault();
-        
-        const formData = {
-            senderId: document.getElementById('senderId').value,
-            receiverId: document.getElementById('receiverId').value,
-            amount: parseFloat(document.getElementById('amount').value),
-            currency: 'CNY',
-            purpose: document.getElementById('purpose').value || 'Payment from CashCloud'
-        };
-        
-        try {
-            showMessage('Processing payment...', 'info');
-            
-            const result = await createPayment(formData);
-            
-            if (result && result.success) {
-                showMessage('Payment sent successfully!', 'success');
-                event.target.reset();
-                await loadTransactionHistory(); // Refresh transaction list
-            } else {
-                throw new Error(result?.error || 'Payment failed');
-            }
-            
-        } catch (error) {
-            console.error('❌ Payment error:', error);
-            showMessage(error.message, 'error');
-        }
-    }
-
-    // Handle request payment form submission
-    async function handleRequestPayment(event) {
-        event.preventDefault();
-        
-        const paymentData = {
-            amount: parseFloat(document.getElementById('requestAmount').value),
-            currency: 'CNY',
-            purpose: document.getElementById('requestPurpose').value,
-            receiverDetails: {
-                email: document.getElementById('receiverEmail').value,
-                name: document.getElementById('receiverName').value
-            }
-        };
-        
-        try {
-            showMessage('Generating payment link...', 'info');
-            
-            const result = await createPaymentLink(paymentData);
-            
-            if (result && result.success) {
-                displayPaymentResult(result);
-                showMessage('Payment link generated!', 'success');
-                event.target.reset();
-            } else {
-                throw new Error(result?.error || 'Failed to generate payment link');
-            }
-            
-        } catch (error) {
-            console.error('❌ Payment link error:', error);
-            showMessage(error.message, 'error');
-        }
-    }
-
-    // Create a payment
-    async function createPayment(paymentData) {
-        try {
-            const response = await fetch('/api/payments/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
+                // SHARE PLATFORMS
+                sharePlatforms: ["whatsapp", "telegram", "wechat"],
+                platformColor: {
+                    "whatsapp": "bg-green-100 border-green-300 hover:bg-green-200",
+                    "telegram": "bg-blue-100 border-blue-300 hover:bg-blue-200",
+                    "wechat": "bg-green-100 border-green-300 hover:bg-green-200"
                 },
-                body: JSON.stringify(paymentData)
-            });
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || `HTTP error! status: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            console.log('✅ Payment created:', result);
-            return result;
-            
-        } catch (error) {
-            console.error('❌ Payment creation failed:', error);
-            throw error;
-        }
-    }
 
-    // Create a payment link
-    async function createPaymentLink(paymentData) {
-        try {
-            // Add authorization token if you have one
-            const token = localStorage.getItem('authToken');
-            const headers = {
-                'Content-Type': 'application/json'
+                initApp() {
+                    this.checkKeys();
+                    this.updateQrData();
+                },
+
+                // 🔍 KEY CHECK
+                checkKeys() {
+                    const hasPublic = this.flutterwavePublicKey && this.flutterwavePublicKey.includes("FLWPUBK_TEST-");
+                    console.log("Flutterwave Keys:", !!hasPublic ? "✅ Ready" : "⚠️ Not set");
+                },
+
+                // 💡 HELPERS
+                receiverPhoneHint() {
+                    const hints = {
+                        "mpesa": "254712345678 (20 digits)",
+                        "bank": "10-16 digits (Bank account)",
+                        "other": "Phone contact"
+                    };
+                    return hints[this.receiverType];
+                },
+
+                transactionRef() {
+                    return "JL360-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+                },
+                
+                methodLabel() {
+                    const labels = {
+                        "wechat": "WeChat Pay",
+                        "alipay": "Alipay",
+                        "bank": "Bank Transfer",
+                        "card": "Credit Card",
+                        "pp": "PayPal"
+                    };
+                    return labels[this.paymentMethod] || "Payment";
+                },
+
+                receiverSummaryName() {
+                    return this.receiverName || "Kenya Institution/Person";
+                },
+
+                receiverPhoneFormatted() {
+                    const format = {
+                        "mpesa": (p) => "+" + p.replace(/\D/g, ''),
+                        "bank": (p) => "Bank: " + p.replace(/\D/g, ''),
+                        "other": (p) => "Contact: " + p
+                    };
+                    return format[this.receiverType](this.receiverPhone);
+                },
+
+                shopSummaryName() {
+                    return this.shopRep ? `${this.shopRep} (${this.shopUrl})` : `China Merchant (${this.shopUrl})`;
+                },
+
+                displayAmount() {
+                    return this.amount.replace(/\D/g, '') || "0";
+                },
+
+                purposeLabel() {
+                    const labels = {
+                        '227020': 'Services (Digital)',
+                        '227010': 'Goods Import',
+                        '227030': 'Royalties',
+                        '999900': 'Other'
+                    };
+                    return labels[this.purpose] || "Unknown Purpose";
+                },
+
+                statusColorClass() {
+                    const colorMap = {
+                        "initiated": "text-yellow-600 bg-yellow-100",
+                        "processing": "text-blue-600 bg-blue-100",
+                        "Settled": "text-green-600 bg-green-100",
+                        "completed": "text-green-600 bg-green-100",
+                        "rejected": "text-red-600 bg-red-100"
+                    };
+                    return colorMap[this.paymentStatus] || "text-gray-600 bg-gray-100";
+                },
+
+                // 🔄 UPDATE QR DATA
+                updateQrData() {
+                    const methodInfo = {
+                        "wechat": {
+                            baseUrl: "https://pay.flutterwave.com/wechat/secure",
+                            param: `?amount=${this.amount}&currency=CNY&tx_ref=${this.transactionRef()}`
+                        },
+                        "alipay": {
+                            baseUrl: "https://pay.flutterwave.com/alipay/secure",
+                            param: `?amount=${this.amount}&currency=CNY&tx_ref=${this.transactionRef()}`
+                        },
+                        "bank": {
+                            baseUrl: "https://pay.flutterwave.com/bank/transfer",
+                            param: `?amount=${this.amount}&currency=CNY&tx_ref=${this.transactionRef()}`
+                        },
+                        "card": {
+                            baseUrl: "https://pay.flutterwave.com/secure",
+                            param: `?amount=${this.amount}&currency=CNY&tx_ref=${this.transactionRef()}`
+                        },
+                        "pp": {
+                            baseUrl: "https://pay.flutterwave.com/paypal/secure",
+                            param: `?amount=${this.amount}&currency=USD&tx_ref=${this.transactionRef()}`
+                        }
+                    };
+
+                    const method = methodInfo[this.paymentMethod];
+                    this.qrTextData = method ? `${method.baseUrl}${method.param}` : `https://pay.flutterwave.com/secure?tx_ref=${this.transactionRef()}`;
+                },
+
+                // ▶️ MAIN GENERATION
+                async generate() {
+                    if (!this.receiverPhone || this.receiverPhone.length < 9) {
+                        this.hasError = true;
+                        this.errorMessage = "Please enter valid phone/account number (9+ digits)";
+                        this.displayOutput = false;
+                        return;
+                    }
+
+                    if (!this.shopUrl || !this.shopUrl.startsWith("http")) {
+                        this.hasError = true;
+                        this.errorMessage = "Shop URL must start with https://";
+                        this.displayOutput = false;
+                        return;
+                    }
+
+                    const amount = parseFloat(this.amount);
+                    if (isNaN(amount) || amount < 1 || amount > 1000000) {
+                        this.hasError = true;
+                        this.errorMessage = "Amount must be between ¥1 and ¥1,000,000";
+                        this.displayOutput = false;
+                        return;
+                    }
+
+                    this.isGenerating = true;
+                    this.displayOutput = false;
+                    this.qrReady = false;
+                    this.qrLoading = false;
+                    this.displayLink = "";
+                    this.transactionRef = this.transactionRef();
+                    this.hasError = false;
+                    this.errorMessage = "";
+                    this.paymentStatus = "processing";
+
+                    try {
+                        // Build QR data for payment
+                        const qrContent = this.qrTextData;
+                        
+                        this.displayLink = qrContent;
+                        this.qrLoading = true;
+                        this.generateQRCode(qrContent);
+                        
+                        setTimeout(() => {
+                            this.qrReady = true;
+                            this.qrLoading = false;
+                            this.paymentStatus = "Settled";
+                            this.currentStatus = 2;
+                            this.displayOutput = true;
+                            this.displayTime = new Date().toLocaleTimeString();
+                        }, 350);
+                    } catch (error) {
+                        console.error("API Error:", error);
+                        this.hasError = true;
+                        this.errorMessage = error.message || "Payment generation failed";
+                    } finally {
+                        this.isGenerating = false;
+                        if (!this.hasError) {
+                            this.paymentStatus = "active";
+                        }
+                    }
+                },
+
+                // 📱 QR CODE GENERATOR
+                generateQRCode(text) {
+                    const container = document.getElementById('qrcode-display');
+                    if (!container) return;
+                    
+                    container.innerHTML = '';
+
+                    try {
+                        // QRCode.js generates real QR code
+                        new QRCode(container, {
+                            text: text,
+                            width: 300,
+                            height: 300,
+                            colorDark: "#000000",
+                            colorLight: "#ffffff",
+                            correctLevel: QRCode.CorrectLevel.H
+                        });
+                    } catch (e) {
+                        console.error("QR Error:", e);
+                    }
+                },
+
+                // 📥 DOWNLOAD FUNCTIONS
+                downloadQR() {
+                    if (!this.qrReady) return;
+                    
+                    const qrElement = document.getElementById("qrcode-display");
+                    const canvas = qrElement.querySelector("canvas");
+                    
+                    if (canvas) {
+                        canvas.toBlob(blob => {
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement("a");
+                            link.download = `joblink360-${this.transactionRef}-qr.png`;
+                            link.href = url;
+                            link.click();
+                            URL.revokeObjectURL(url);
+                        });
+                    } else {
+                        // Fallback to QRCode.js image
+                        const img = qrElement.querySelector("img");
+                        if (img) {
+                            img.download = `joblink360-${this.transactionRef}-qr.png`;
+                            link.href = img.src;
+                            link.target = "_blank";
+                            link.click();
+                        }
+                    }
+                },
+
+                copyLink() {
+                    if (!this.displayLink) return;
+
+                    navigator.clipboard.writeText(this.displayLink).then(() => {
+                        this.$refs.button.innerHTML = '<i class="fa-solid fa-check text-green-600 mr-1"></i> Copied!';
+                    }, err => {
+                        prompt("Copy this link:", this.displayLink);
+                    });
+                },
+
+                sharePlatform(platform) {
+                    const encodedLink = encodeURIComponent(this.displayLink);
+                    let url = "";
+
+                    switch(platform) {
+                        case 'whatsapp':
+                            url = "https://web.whatsapp.com/send?text=" + "Payment Link: " + this.displayLink;
+                            break;
+                        case 'telegram':
+                            url = "https://t.me/share/url?url=" + this.displayLink + "&text=" + "Pay here: " + this.displayLink;
+                            break;
+                        case 'wechat':
+                            url = "https://wechat.com/share?url=" + encodedLink + "&text=" + "Pay here";
+                            break;
+                        default:
+                            url = "https://share.flutterwave.com/" + encodedLink;
+                    }
+
+                    window.open(url, "_blank");
+                },
+
+                downloadPDF() {
+                    if (!this.displayLink) return;
+
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+
+                    doc.setFontSize(18);
+                    doc.setTextColor(40);
+                    doc.text("Joblink 360 - Payment Receipt", 14, 22);
+
+                    doc.setFontSize(10);
+                    doc.text(`Payment Method: ${this.methodLabel()}`, 14, 30);
+                    doc.text(`Amount: ¥${this.amount} CNY`, 14, 37);
+                    doc.text(`Receiver: ${this.receiverSummaryName()}`, 14, 44);
+                    doc.text(`From: ${this.shopSummaryName()}`, 14, 51);
+                    doc.text(`Status: ${this.paymentStatus}`, 14, 58);
+
+                    doc.setLineWidth(0.5);
+                    doc.line(14, 62, 196, 62);
+
+                    doc.text("Payment Link:", 14, 70);
+                    doc.setFontSize(9);
+                    doc.setTextColor(0);
+                    const splitText = doc.splitTextToSize(this.displayLink, 180);
+                    doc.text(splitText, 14, 76);
+
+                    doc.setFontSize(8);
+                    doc.setTextColor(100);
+                    doc.text("Generated: " + this.displayTime, 14, 210);
+
+                    doc.save(`payment-${this.transactionRef}.pdf`);
+                }
             };
-            
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
-            
-            const response = await fetch('/api/payments/create', {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({
-                    ...paymentData,
-                    type: 'link'
-                })
-            });
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || `HTTP error! status: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            console.log('✅ Payment link created:', result);
-            return result;
-            
-        } catch (error) {
-            console.error('❌ Payment link creation failed:', error);
-            throw error;
         }
-    }
-
-    // Display payment result (QR code, link)
-    function displayPaymentResult(result) {
-        const qrSection = document.getElementById('qrSection');
-        const paymentLink = document.getElementById('paymentLink');
-        const transactionRef = document.getElementById('transactionRef');
-        
-        if (qrSection) {
-            qrSection.classList.add('show');
-            
-            if (result.payment_link) {
-                paymentLink.href = result.payment_link;
-                paymentLink.textContent = result.payment_link;
-            }
-            
-            if (result.transaction_ref) {
-                transactionRef.textContent = result.transaction_ref;
-            }
-            
-            // Simulate QR code (you'd generate a real one here)
-            const qrCode = document.getElementById('qrCode');
-            if (qrCode) {
-                qrCode.innerHTML = '<span>🔳 QR Code Ready</span>';
-            }
-        }
-    }
-
-    // Update transaction table
-    function updateTransactionTable(transactions) {
-        const tableBody = document.getElementById('transactionBody');
-        if (!tableBody) return;
-        
-        tableBody.innerHTML = '';
-        
-        transactions.forEach(tx => {
-            const row = tableBody.insertRow();
-            
-            // Transaction ID
-            const idCell = row.insertCell(0);
-            idCell.textContent = tx._id || tx.id || 'N/A';
-            
-            // Recipient
-            const recipientCell = row.insertCell(1);
-            recipientCell.textContent = tx.receiverDetails?.name || tx.recipient || 'N/A';
-            
-            // Amount
-            const amountCell = row.insertCell(2);
-            amountCell.textContent = `¥${tx.amount || 0}`;
-            
-            // Status
-            const statusCell = row.insertCell(3);
-            const status = tx.status || 'pending';
-            const statusSpan = document.createElement('span');
-            statusSpan.className = `status-badge status-${status}`;
-            statusSpan.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-            statusCell.appendChild(statusSpan);
-            
-            // Action
-            const actionCell = row.insertCell(4);
-            const viewBtn = document.createElement('button');
-            viewBtn.textContent = 'View';
-            viewBtn.style.cssText = `
-                background: #667eea;
-                color: white;
-                border: none;
-                padding: 5px 15px;
-                border-radius: 5px;
-                cursor: pointer;
-                font-size: 0.875rem;
-            `;
-            viewBtn.onclick = () => viewTransaction(tx._id || tx.id);
-            actionCell.appendChild(viewBtn);
-        });
-    }
-
-    // View transaction details
-    function viewTransaction(transactionId) {
-        if (!transactionId) {
-            showMessage('Invalid transaction ID', 'error');
-            return;
-        }
-        
-        console.log('Viewing transaction:', transactionId);
-        showMessage(`Viewing transaction: ${transactionId}`, 'info');
-        // Add your view logic here - maybe open a modal or navigate to details page
-    }
-
-    // Show message to user
-    function showMessage(message, type = 'info') {
-        // Remove any existing messages
-        const existingMessages = document.querySelectorAll('.error-message, .success-message');
-        existingMessages.forEach(msg => msg.remove());
-        
-        const messageDiv = document.createElement('div');
-        messageDiv.className = type === 'error' ? 'error-message' : 'success-message';
-        messageDiv.textContent = message;
-        
-        document.body.appendChild(messageDiv);
-        
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            if (messageDiv.parentNode) {
-                messageDiv.remove();
-            }
-        }, 5000);
-        
-        // Also log to console
-        if (type === 'error') {
-            console.error('❌', message);
-        } else if (type === 'success') {
-            console.log('✅', message);
-        } else {
-            console.log('ℹ️', message);
-        }
-    }
-
-    // Make functions available globally if needed
-    window.viewTransaction = viewTransaction;
-    window.showMessage = showMessage;
     </script>
 </body>
 </html>
